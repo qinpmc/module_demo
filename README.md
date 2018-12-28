@@ -174,7 +174,8 @@ function test(ele) {
 }
  
 ```
-** ES6 模块与 CommonJS 模块的差异** 
+
+**ES6 模块与 CommonJS 模块的差异** 
 
 1. CommonJS 模块输出的是一个值的拷贝，ES6 模块输出的是值的引用。  
 2. CommonJS 模块是运行时加载，ES6 模块是编译时输出接口。   
@@ -282,14 +283,133 @@ require(['js/moduleA.js'], function(a){
 });
 ```
 
-路径
+### 路径
+示例：路径demo1
+
+ 路径demo1
+    |- vendor
+         |- require.js
+    |- index1.html
+    |- main1.js
+    |- moduleA.js
+
+```
+// index1.html 文件  通过data-main 引入和自身同目录的main1.js
+
+  <!--在有data-main的情况下，main1.js前面的部分就是baseUrl，比如此处的/ -->
+  <script data-main="main1" src="vendor/require.js"></script>
+  
+// main1.js  引用模块 moduleA
+
+require(["moduleA"],function(a){
+    ...
+}
+
+ moduleA 地址： 没有其他配置，和main.js同目录
+
+```
 
 
 
+示例：路径demo2
+ 路径demo2
+    |- js
+         |-lib
+             |-moduleA2.js
+         |- main.js
+         |- moduleA.js
+    |- vendor
+         |- require.js
+         |-moduleA3.js
+    |- index1.html
+ 
+```
+// index1.html 文件  通过data-main 引入 js文件夹下 main.js，这里使得baseUrl 为js
+<script data-main="js/main" src="vendor/require.js"></script>
+
+main.js 第一个引入 ： moduleA 的地址应为 js 文件夹下 moduleA.js
+require(["moduleA"],function(a){
+	console.log(a);
+})
+
+//main.js 第二个引入 ：指定moduleA2的 paths 为 "lib/moduleA2"，则引入的文件为 baseUrl（ 即index1.html中指定的 js）+lib/moduleA2
+//为:js/lib/moduleA2.js
+
+require.config({
+  paths:{
+	"moduleA2" : "lib/moduleA2"  
+  }
+}); 
+require(["moduleA2"],function(a){
+	console.log(a);
+}) 
+
+//main.js 第三个引入 ：指定了 paths 为 ../vendor/moduleA3，同上，则引入的文件为 js+ ../vendor/moduleA3,即为vendor/moduleA3
+
+require.config({
+  paths:{
+	"moduleA3" : "../vendor/moduleA3"  
+  }
+}); 
+require(["moduleA3"],function(a){
+	console.log(a);
+})
+
+```
+
+示例：路径demo3
+
+ 路径demo3
+    |- js
+         |-lib
+             |-moduleA2.js
+         |- main.js
+         |- moduleA.js
+    |- vendor
+         |- require.js
+         |- moduleA3.js
+    |- index1.html
+    
+注意： 解析的路径均以index.html 实际位置为参考   
+
+```
+main.js 第一个引入 ：指定baseUrl 为js，moduleA 的paths为 moduleA，则引入的文件为 js/moduleA.js
+
+require.config({
+  baseUrl:"js",
+  paths:{
+	"moduleA" : "moduleA"  
+  }
+}); 
+require(["moduleA"],function(a){
+	console.log(a);
+}) 
 
 
+// 原理同上， 引入 js/lib/moduleA2.js
+require.config({
+  baseUrl:"js/lib",
+  paths:{
+	"moduleA2" : "moduleA2"  
+  }
+}); 
+require(["moduleA2"],function(a){
+	console.log(a);
+}) 
+ 
 
-
+ // 原理同上， 引入 vendor/moduleA3.js
+require.config({
+  baseUrl:"vendor",
+  paths:{
+	"moduleA3" : "moduleA3"  
+  }
+}); 
+require(["moduleA3"],function(a){
+	console.log(a);
+}) 
+ 
+```
 
 
 
