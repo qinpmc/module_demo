@@ -413,18 +413,82 @@ require(["moduleA3"],function(a){
 
 
 
+### requireJS简单包装CommonJS
+只要在commonJS代码的外层简单包裹一层函数，就可以在浏览器端直接运行.
+示例： commonJS
+
+```
+// a.js
+define(function(require,exports,module){
+	var a = 100;
+	module.exports.a = a;
+})
+
+// b.js
+define(function(require,exports,module){
+	var result  = require("./a");
+	console.log(result.a);
+})
+
+```
+
+### 懒加载
+AMD保留了commonjs中的require、exprots、module这三个功能。可以不把依赖罗列在dependencies数组中。而是在代码中用require来引入
+示例：懒加载
+
+```
+// main.js
+define(function(){
+	console.log("main");
+	document.onclick = function(){
+		require(["./vendor/moduleB"],function(b){
+			b.test();
+		});
+	}
+});
+
+//moduleB.js
+define(function(){
+　　console.log('a');
+    return {
+        test : function(){
+            console.log('a.test');
+        }
+    }
+})
+```
+
+### shim
+
+shim属性为那些没有使用define()来声明依赖关系、设置模块的"浏览器全局变量注入"型脚本做依赖和导出配置，即加载非规范的模块。   
+
+举例来说，underscore和backbone这两个库，都没有采用AMD规范编写。如果要加载它们的话，必须先定义它们的特征。    
+具体来说，每个模块要定义（1）exports值（输出的变量名），表明这个模块外部调用时的名称；（2）deps数组，表明该模块的依赖性
+
+
+```
+require.config({
+　　　　shim: {
+
+　　　　　　'underscore':{
+　　　　　　　　exports: '_'
+　　　　　　},
+　　　　　　'backbone': {
+　　　　　　　　deps: ['underscore', 'jquery'],
+　　　　　　　　exports: 'Backbone'
+　　　　　　}
+　　　　}
+　　});
+
+```
+
+示例：shim
 
 
 
+### 引入 Jquery/domReady等
 
-
-
-
-
-
-
-
-
+参见示例： jquery引入 / domready
 
 
 
