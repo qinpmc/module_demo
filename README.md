@@ -12,6 +12,10 @@ https://zhuanlan.zhihu.com/p/32324311 JavaScript模块化 --- Commonjs、AMD、C
 ### 无模块化
 - 污染全局作用域。 因为每一个模块都是暴露在全局的，简单的使用，会导致全局变量命名冲突，当然，我们也可以使用命名空间的方式来解决。
  
+
+### 什么是模块 
+- 将一个复杂的程序依据一定的规则(规范)封装成几个块(文件), 并进行组合在一起;
+- 块的内部数据与实现是私有的, 只是向外部暴露一些接口(方法)与外部其它模块通信. 
  
  
 ### 初期解决方案
@@ -107,6 +111,8 @@ npm install uniq --save // 用于数组去重
 打包： browserify js/app.js -o js/dist/bundle.js
 
 
+
+
 ## AMD
 
 CommonJS规范加载模块是同步的，也就是说，只有加载完成，才能执行后面的操作。AMD规范则是非同步加载模块，允许指定回调函数。     
@@ -115,12 +121,42 @@ CommonJS规范加载模块是同步的，也就是说，只有加载完成，才
 AMD 规范：
 https://github.com/amdjs/amdjs-api/wiki/AMD-(%E4%B8%AD%E6%96%87%E7%89%88
 
+### 特点
+- AMD模块定义的方法非常清晰，不会污染全局环境，能够清楚地显示依赖关系。  
+- AMD模式可以用于浏览器环境，并且允许非同步加载模块，也可以根据需要动态加载模块。   
+
 本规范只定义了一个函数 "define"，它是全局变量。函数的描述为：     
  
 ```
  define(id?, dependencies?, factory);
-```
+ 
+ 
+//定义没有依赖的模块
+define(function(){
+   return 模块
+})
 
+//定义有依赖的模块
+define(['module1', 'module2'], function(m1, m2){
+   return 模块
+})
+
+引入使用模块:
+require(['module1', 'module2'], function(m1, m2){
+   使用m1/m2
+})
+ 
+```
+ 
+不使用AMD的话，前端页面首先会发送多个请求，其次引入的js文件顺序不能搞错，否则会报错
+ 
+ 
+
+
+
+ 
+ 
+ 
 后文专门介绍 AMD代表库 Requirejs。
 
 ## CMD
@@ -135,7 +171,8 @@ define(function(require, exports, module){
   exports.xxx = value
   module.exports = value
 })
-复制代码//定义有依赖的模块
+
+//定义有依赖的模块
 define(function(require, exports, module){
   //引入依赖模块(同步)
   var module2 = require('./module2')
@@ -145,7 +182,8 @@ define(function(require, exports, module){
   //暴露模块
   exports.xxx = value
 })
-复制代码引入使用模块：
+
+//引入使用模块：
 define(function (require) {
   var m1 = require('./module1')
   var m4 = require('./module4')
@@ -154,6 +192,12 @@ define(function (require) {
 })
 
 ```
+
+AMD和CMD的区别：
+
+- 1. 对于依赖的模块，AMD 是提前执行，CMD 是延迟执行。不过 RequireJS 从 2.0 开始，也改成可以延迟执行（根据写法不同，处理方式不同）。CMD 推崇 as lazy as possible（尽可能的懒加载，也称为延迟加载，即在需要的时候才加载）。
+
+- 2. CMD 推崇依赖就近，AMD 推崇依赖前置。
 
  
 ## ES6模块化
@@ -175,6 +219,21 @@ function test(ele) {
  
 ```
 
+```
+
+// export-default.js
+export default function () {
+  console.log('foo');
+  
+  
+// import-default.js
+import customName from './export-default';
+customName(); // 'foo'
+ 
+
+```
+
+
 **ES6 模块与 CommonJS 模块的差异** 
 
 1. CommonJS 模块输出的是一个值的拷贝，ES6 模块输出的是值的引用。  
@@ -187,13 +246,44 @@ export let counter = 3;
 export function incCounter() {
   counter++;
 }
+
 // main.js
 import { counter, incCounter } from './lib';
 console.log(counter); // 3
 incCounter();
 console.log(counter); // 4
 
+// ES6 模块的运行机制与 CommonJS 不一样。ES6 模块是动态引用，并且不会缓存值，模块里面的变量绑定其所在的模块。
+
 ```
+
+
+
+## UMD（Universal Module Definition - 通用模块定义）
+UMD是AMD和CommonJS的一个糅合。AMD是浏览器优先，异步加载；CommonJS是服务器优先，同步加载。      
+既然要通用，怎么办呢？那就先判断是否支持node.js的模块，存在就使用node.js；再判断是否支持AMD（define是否存在），存在则使用AMD的方式加载。这就是所谓的UMD。       
+
+```
+
+((root, factory) => {
+  if (typeof define === 'function' && define.amd) {
+    //AMD
+    define(['jquery'], factory);
+  } else if (typeof exports === 'object') {
+    //CommonJS
+    var $ = requie('jquery');
+    module.exports = factory($);
+  } else {
+    //都不是，浏览器全局定义
+    root.testModule = factory(root.jQuery);
+  }
+})(this, ($) => {
+  //do something...  这里是真正的函数体
+});
+
+```
+
+ 
 
 ## Requirejs
 
